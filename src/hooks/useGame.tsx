@@ -15,7 +15,7 @@ const wsProvider = new WsProvider('ws://127.0.0.1:9944');
 let api: ApiPromise | null = null
 let contract: ContractPromise | null = null
 const metadata = require("./mikasa.json");
-const address = "5Cj8nda4ygYNgsXQ1pVQe7FDSBVUsQnkJxDHsgmBpUtmyk2T";
+const address = "5D1cw6mkxz8BjzZQjJwaDLJSmA3z79Titxa63o67ukewk2fL";
 
 
 const useGame = () => {

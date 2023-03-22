@@ -6,11 +6,17 @@ import { ApiPromise, WsProvider } from "@polkadot/api";
 import { ContractPromise } from "@polkadot/api-contract";
 
 import { Keyring } from "@polkadot/keyring";
-import util_crypto from "@polkadot/util-crypto";
 import type { WeightV2 } from '@polkadot/types/interfaces'
 import { BN, BN_ONE } from "@polkadot/util";
 const MAX_CALL_WEIGHT = new BN(5_000_000_000_000).isub(BN_ONE);
 const PROOFSIZE = new BN(1_000_000);
+
+const wsProvider = new WsProvider('ws://127.0.0.1:9944');
+let api: ApiPromise | null = null
+let contract: ContractPromise | null = null
+const metadata = require("./mikasa.json");
+const address = "5Cj8nda4ygYNgsXQ1pVQe7FDSBVUsQnkJxDHsgmBpUtmyk2T";
+
 
 const useGame = () => {
   const [isRunning, setIsRunning] = useState<boolean>(false)
@@ -30,6 +36,13 @@ const useGame = () => {
   )
 
   const initialize = useCallback(() => {
+    ApiPromise.create({
+      provider: wsProvider,
+    }).then((api_tmp) => {
+      api = api_tmp;
+      contract = new ContractPromise(api, metadata, address);
+    });
+    
     setSteps(0)
     const cells = getCells(COLUMNS)
 
@@ -46,20 +59,9 @@ const useGame = () => {
   }, [])
 
   const handleNext = useCallback(() => {
-    const wsProvider = new WsProvider('wss://0adf-2a0d-3344-18-3b10-b849-40b2-1e09-ad33.eu.ngrok.io');
-    const api = ApiPromise.create({
-      provider: wsProvider,
-    }).then(api => {
-      const metadata = require("./mikasa.json");
-      const address = "5HPhYELrkS96S7bG8wcTUdji869XJmc7za6MVd9ks5nse9so";
-      const contract = new ContractPromise(api, metadata, address);
-
-      const keyring = new Keyring({ type: 'sr25519' });
-
-      const alicePair = keyring.addFromUri('//Alice', { name: 'Alice default' });
-
-      // (We perform the send from an account, here using Alice's address)
-      contract.query.get(
+    const keyring = new Keyring({ type: 'sr25519' });
+    const alicePair = keyring.addFromUri('//Alice', { name: 'Alice default' });
+    contract?.query.get(
         alicePair.address,
         {
           gasLimit: api?.registry.createType('WeightV2', {
@@ -73,7 +75,6 @@ const useGame = () => {
         setGrid(obj.output?.toJSON()["ok"])
       });
 
-    });
   }, [grid, steps])
 
   const handleCell = useCallback((column: number, rowIndex: number, cell: boolean) => {
